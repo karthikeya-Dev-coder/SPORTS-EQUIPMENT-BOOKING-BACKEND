@@ -17,6 +17,10 @@ export class EquipmentRepository {
     return this.repository.findOne({ where: { id } });
   }
 
+  async findByName(name: string): Promise<EquipmentEntity | null> {
+    return this.repository.findOne({ where: { name } });
+  }
+
   async save(equipment: Partial<EquipmentEntity>): Promise<EquipmentEntity> {
     return this.repository.save(equipment);
   }

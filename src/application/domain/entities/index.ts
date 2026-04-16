@@ -5,10 +5,9 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
-  password?: string;
-  avatar?: string;
-  phone?: string;
-  department?: string;
+  password?: string | null | undefined;
+  avatar?: string | null | undefined;
+  department?: string | null | undefined;
   createdAt: Date;
   isActive: boolean;
 }

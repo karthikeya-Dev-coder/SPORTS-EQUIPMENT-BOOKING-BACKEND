@@ -23,7 +23,7 @@ export class ForgotPasswordUseCase {
     user.password = hashedPassword;
     await this.userRepository.save(user);
 
-    await this.emailService.sendWelcomeEmail(user.email, user.name, tempPassword);
+    await this.emailService.sendPasswordResetEmail(user.email, user.name, tempPassword);
     
     return { message: "New temporary password sent to your email" };
   }

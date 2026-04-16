@@ -31,8 +31,15 @@ export class AuthController {
 
   private async login(req: Request, res: Response) {
     try {
-      const { email, password } = req.body;
-      const result = await this.loginUseCase.execute(email, password);
+      // Extract either email or userId based on who is logging in
+      const { email, userId, password } = req.body;
+      const loginIdentifier = email || userId;
+
+      if (!loginIdentifier) {
+        return res.status(400).json({ message: "Please provide an email or userId" });
+      }
+
+      const result = await this.loginUseCase.execute(loginIdentifier, password);
       return res.json(result);
     } catch (error: any) {
       Logger.error(`Login failed: ${error.message}`);

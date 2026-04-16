@@ -13,30 +13,75 @@ export class CreateBookingUseCase {
 
   async execute(data: {
     studentId: string;
-    equipmentId: string;
+    equipmentId?: string;
+    equipmentName?: string;
     date: string;
     timeSlot: string;
     quantity: number;
   }) {
-    // 1. Suspension Check
-    const warnings = await this.warningRepository.findByStudentId(data.studentId);
-    const isSuspended = warnings.length >= 3 || warnings.some(w => w.level === 3);
-    if (isSuspended) throw new Error("Student is suspended due to penalties");
+    // 1. Suspension Check (Total Count & Payment Status)
+    const allWarnings = await this.warningRepository.findByStudentId(data.studentId);
+    
+    const totalWarnings = allWarnings.length;
+    const hasLevel3 = allWarnings.some(w => w.level === 3);
+    const hasUnpaidFines = allWarnings.some(w => !w.isPaid);
 
-    const equipment = await this.equipmentRepository.findById(data.equipmentId);
+    if (totalWarnings >= 3 || hasLevel3) {
+      // Find the latest critical warning date
+      const latestWarningDate = allWarnings.reduce((latest, current) => 
+        current.issuedAt > latest ? current.issuedAt : latest, new Date(0));
+      
+      const suspensionDurationDays = 21; // 3 weeks
+      const now = new Date();
+      if (latestWarningDate.getTime() === 0) throw new Error("Warning data inconsistency detected");
+
+      const suspensionEndDate = new Date(latestWarningDate);
+      suspensionEndDate.setDate(suspensionEndDate.getDate() + suspensionDurationDays);
+
+      if (now < suspensionEndDate) {
+        const remainingDays = Math.ceil((suspensionEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        throw new Error(`Student is suspended for 3 weeks due to recurrent warnings. Suspension ends in ${remainingDays} days.`);
+      }
+    }
+
+    if (hasUnpaidFines) {
+      throw new Error("Booking blocked: You have unpaid penalties. Please clear your fines to continue booking.");
+    }
+
+    let equipmentId = data.equipmentId;
+
+    // 2. Find Equipment by Name if ID is missing
+    if (!equipmentId && data.equipmentName) {
+      const eq = await this.equipmentRepository.findByName(data.equipmentName);
+      if (!eq) throw new Error(`Equipment with name "${data.equipmentName}" not found`);
+      equipmentId = eq.id;
+    }
+
+    if (!equipmentId) throw new Error("Equipment ID or name must be provided");
+
+    const equipment = await this.equipmentRepository.findById(equipmentId);
     if (!equipment) throw new Error("Equipment not found");
     if (equipment.available < data.quantity) throw new Error("Insufficient stock available");
 
     const booking = await this.bookingRepository.save({
-      ...data,
-      status: 'pending'
+      studentId: data.studentId,
+      equipmentId: equipmentId,
+      date: data.date,
+      timeSlot: data.timeSlot,
+      quantity: data.quantity,
+      status: 'approved' // Auto-approved
     });
 
-    // Log Activity
+    // 3. Update Equipment Stock immediately
+    equipment.available -= data.quantity;
+    equipment.inUse += data.quantity;
+    await this.equipmentRepository.save(equipment);
+
+    // 4. Log Activity
     await this.logRepository.save({
       userId: data.studentId,
-      action: "Booking Created",
-      details: `Booked ${data.quantity}x ${equipment.name}`,
+      action: "Booking Created & Approved",
+      details: `Auto-approved booking of ${data.quantity}x ${equipment.name}`,
       timestamp: new Date()
     });
 

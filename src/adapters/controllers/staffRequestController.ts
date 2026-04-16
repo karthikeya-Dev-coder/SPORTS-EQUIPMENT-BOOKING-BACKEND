@@ -13,7 +13,7 @@ export class StaffRequestController {
   private initRoutes() {
     this.router.get("/", authenticate, authorize(["admin"]), this.listAll.bind(this));
     this.router.get("/my", authenticate, authorize(["staff"]), this.listMy.bind(this));
-    this.router.post("/", authenticate, authorize(["staff"]), this.create.bind(this));
+    this.router.post("/", authenticate, authorize(["staff", "admin"]), this.create.bind(this));
     this.router.patch("/:id/status", authenticate, authorize(["admin"]), this.updateStatus.bind(this));
   }
 
@@ -38,7 +38,7 @@ export class StaffRequestController {
 
   private async updateStatus(req: Request, res: Response) {
     const { status } = req.body;
-    const request = await this.repository.findById(req.params.id!);
+    const request = await this.repository.findById(req.params.id as string);
     if (!request) return res.status(404).json({ message: "Request not found" });
     
     request.status = status;

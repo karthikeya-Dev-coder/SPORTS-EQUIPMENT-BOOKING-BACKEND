@@ -22,17 +22,23 @@ const seed = async () => {
     const logRepository = AppDataSource.getRepository(ActivityLogEntity);
     const staffRequestRepo = AppDataSource.getRepository(StaffRequestEntity);
 
+    // Clear existing data to prevent conflicts on re-seed
+    Logger.info("Clearing existing data...");
+    await AppDataSource.query('TRUNCATE TABLE users, equipment, bookings, warnings, staff_requests, activity_logs CASCADE;');
+    Logger.info("Data cleared successfully.");
+
     // 1. Seed Users
-    const password = await bcrypt.hash("sports@123", 10);
-    
+    const adminPassword = await bcrypt.hash("admin123", 10);
+    const userPassword = await bcrypt.hash("sports@123", 10);
+
     // Using valid UUIDs
     const users = [
-      { id: '11111111-1111-1111-1111-111111111111', name: 'Dr. Rajesh Kumar', email: 'admin@sports.edu', role: 'admin', department: 'Sports Administration', password, isActive: true },
-      { id: '22222222-2222-2222-2222-222222222222', name: 'Priya Sharma', email: 'priya@sports.edu', role: 'staff', department: 'Cricket', password, isActive: true },
-      { id: '33333333-3333-3333-3333-333333333333', name: 'Amit Verma', email: 'amit@sports.edu', role: 'staff', department: 'Football', password, isActive: true },
-      { id: '44444444-4444-4444-4444-444444444444', name: 'Arjun Mehta', email: 'arjun@student.edu', role: 'student', password, isActive: true },
-      { id: '55555555-5555-5555-5555-555555555555', name: 'Sneha Reddy', email: 'sneha@student.edu', role: 'student', password, isActive: true },
-      { id: '66666666-6666-6666-6666-666666666666', name: 'Rahul Das', email: 'rahul@student.edu', role: 'student', password, isActive: true },
+      { id: '11111111-1111-1111-1111-111111111111', name: 'System Admin', email: 'admin', role: 'admin', department: 'Sports Administration', password: adminPassword, isActive: true },
+      { id: '22222222-2222-2222-2222-222222222222', name: 'Priya Sharma', email: 'priya@gmail.com', role: 'staff', department: 'Cricket', password: userPassword, isActive: true },
+      { id: '33333333-3333-3333-3333-333333333333', name: 'Amit Verma', email: 'amit@gmail.com', role: 'staff', department: 'Football', password: userPassword, isActive: true },
+      { id: '44444444-4444-4444-4444-444444444444', name: 'Arjun Mehta', email: 'arjun@gmail.com', role: 'student', password: userPassword, isActive: true },
+      { id: '55555555-5555-5555-5555-555555555555', name: 'Sneha Reddy', email: 'sneha@gmail.com', role: 'student', password: userPassword, isActive: true },
+      { id: '66666666-6666-6666-6666-666666666666', name: 'Rahul Das', email: 'rahul@gmail.com', role: 'student', password: userPassword, isActive: true },
     ];
 
     for (const u of users) {
@@ -71,10 +77,10 @@ const seed = async () => {
     ];
 
     for (const b of bookings) {
-      const existing = await bookingRepository.findOneBy({ 
-        studentId: b.studentId, 
-        equipmentId: b.equipmentId, 
-        date: b.date as string 
+      const existing = await bookingRepository.findOneBy({
+        studentId: b.studentId,
+        equipmentId: b.equipmentId,
+        date: b.date as string
       });
       if (!existing) {
         await bookingRepository.save(bookingRepository.create(b as any));
@@ -119,6 +125,12 @@ const seed = async () => {
     }
 
     Logger.info("✅ Seeding completed successfully");
+    console.log("\n" + "=".repeat(40));
+    console.log("🚀 ADMIN INITIAL CREDENTIALS");
+    console.log("=".repeat(40));
+    console.log(`👤 User ID : admin`);
+    console.log(`🔑 Password: admin123`);
+    console.log("=".repeat(40) + "\n");
     process.exit(0);
   } catch (error) {
     Logger.error("❌ Seeding failed:");

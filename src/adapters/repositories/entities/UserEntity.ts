@@ -22,14 +22,11 @@ export class UserEntity implements User {
   })
   role!: UserRole;
 
-  @Column({ nullable: true })
-  avatar?: string;
+  @Column({ type: "varchar", nullable: true })
+  avatar?: string | null | undefined;
 
-  @Column({ nullable: true })
-  phone?: string;
-
-  @Column({ nullable: true })
-  department?: string;
+  @Column({ type: "varchar", nullable: true })
+  department?: string | null | undefined;
 
   @CreateDateColumn()
   createdAt!: Date;
