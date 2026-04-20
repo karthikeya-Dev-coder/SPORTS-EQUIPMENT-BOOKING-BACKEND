@@ -9,48 +9,48 @@ import { initializeDatabase } from "@/src/infrastructure/database/dataSource";
 import { registerRoutes } from "./routes";
 import { CronService } from "@/src/infrastructure/services/CronService";
 
-export const createApp = async () => {
-  const app = express();
+const app = express();
 
-  app.use(helmet());
-  app.use(cors({
-    origin: "*", // Adjust as needed
-    credentials: true
-  }));
-  app.use(express.json());
-  app.use(cookieParser());
+app.use(helmet());
+app.use(cors({
+  origin: "*",
+  credentials: true
+}));
+app.use(express.json());
+app.use(cookieParser());
 
-  // Register Routes
-  const apiRouter = registerRoutes();
-  app.use("/api", apiRouter);
-
-  return app;
-};
-
-const startServer = async () => {
+// Database initialization middleware for serverless environments
+app.use(async (req, res, next) => {
   try {
-    // 1. Initialize Database
     await initializeDatabase();
-
-    // 2. Start Services
-    CronService.start();
-
-    // 3. Setup Express
-    const app = await createApp();
-
-    // 4. Start Listen
-    app.listen(config.port, () => {
-      Logger.info(`🚀 Server running on http://localhost:${config.port}`);
-      Logger.info(`🏥 Health check at http://localhost:${config.port}/api/health`);
-    });
-
+    next();
   } catch (error) {
-    Logger.error("❌ Failed to start server:");
-    Logger.error(error);
-    process.exit(1);
+    Logger.error("Failed to initialize database in middleware:", error);
+    res.status(500).json({ error: "Internal Server Error (DB)" });
+    return;
   }
-};
+});
 
+// Register Routes
+const apiRouter = registerRoutes();
+app.use("/api", apiRouter);
+
+// Local development server
 if (require.main === module) {
-  startServer();
+  const startLocalServer = async () => {
+    try {
+      await initializeDatabase();
+      CronService.start();
+      app.listen(config.port, () => {
+        Logger.info(`🚀 Local server running on http://localhost:${config.port}`);
+      });
+    } catch (error) {
+      Logger.error("Failed to start local server:", error);
+      process.exit(1);
+    }
+  };
+  startLocalServer();
 }
+
+export default app;
+
