@@ -5,7 +5,10 @@ import { authenticate, authorize } from '../../infrastructure/middleware/standal
 import { AuthRequest } from "../../infrastructure/middleware/standalone_auth";
 import { Logger } from "@/src/shared/logger";
 import { CreateUserUseCase } from "@/src/application/usecases/user/createUser";
+import { generateRandomPassword } from "@/src/shared/utils";
+import bcrypt from "bcryptjs";
 import { EmailService } from "@/src/infrastructure/services/EmailService";
+import { UserRole } from "@/src/application/domain/entities";
 
 export class UserController {
   public router = Router();
@@ -35,9 +38,17 @@ export class UserController {
       const user = await this.userRepository.findById(id as string);
       if (!user) return res.status(404).json({ message: "User not found" });
 
+      const newPassword = generateRandomPassword();
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      
+      await this.userRepository.save({
+        ...user,
+        password: hashedPassword
+      });
+
       const emailService = new EmailService();
-      await emailService.sendWelcomeEmail(user.email, user.name, "sports@123");
-      return res.json({ message: "Credentials sent successfully" });
+      await emailService.sendWelcomeEmail(user.email, user.name, newPassword);
+      return res.json({ message: "New credentials generated and sent successfully" });
     } catch (error: any) {
       return res.status(500).json({ message: error.message });
     }
@@ -84,12 +95,18 @@ export class UserController {
       
       if (!user) return res.status(404).json({ message: "User not found" });
 
-      // In a real system, you'd reset the password. 
-      // For this "seed data" request, we send the default seed password.
-      const emailService = new EmailService(); 
-      await emailService.sendWelcomeEmail(email || user.email, user.name, "sports@123");
+      const newPassword = generateRandomPassword();
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      
+      await this.userRepository.save({
+        ...user,
+        password: hashedPassword
+      });
 
-      return res.json({ message: `Credentials sent to ${email || user.email}` });
+      const emailService = new EmailService(); 
+      await emailService.sendWelcomeEmail(email || user.email, user.name, newPassword);
+
+      return res.json({ message: `New credentials generated and sent to ${email || user.email}` });
     } catch (error: any) {
       Logger.error(`Resend credentials failed: ${error.message}`);
       return res.status(500).json({ message: error.message });

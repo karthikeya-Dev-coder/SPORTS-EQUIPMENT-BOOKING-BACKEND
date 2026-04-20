@@ -33,4 +33,10 @@ export class UserEntity implements User {
 
   @Column({ default: true })
   isActive!: boolean;
+
+  @Column({ type: "varchar", nullable: true, select: false })
+  resetOtp?: string | null;
+
+  @Column({ type: "timestamp", nullable: true, select: false })
+  resetOtpExpiresAt?: Date | null;
 }

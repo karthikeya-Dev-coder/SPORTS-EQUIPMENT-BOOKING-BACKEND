@@ -1,4 +1,5 @@
 import { Request, Response, Router } from "express";
+import { MoreThanOrEqual } from "typeorm";
 import { AppDataSource } from "@/src/infrastructure/database/dataSource";
 import { UserEntity } from "@/src/adapters/repositories/entities/UserEntity";
 import { EquipmentEntity } from "@/src/adapters/repositories/entities/EquipmentEntity";
@@ -23,8 +24,33 @@ export class DashboardController {
 
   private async getLogs(req: Request, res: Response) {
     const logRepo = AppDataSource.getRepository(ActivityLogEntity);
-    const logs = await logRepo.find({ order: { timestamp: "DESC" }, take: 100 });
-    return res.json(logs);
+    const userRepo = AppDataSource.getRepository(UserEntity);
+
+    const twoDaysAgo = new Date();
+    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+
+    const logs = await logRepo.find({
+      where: {
+        timestamp: MoreThanOrEqual(twoDaysAgo)
+      },
+      order: { timestamp: "DESC" },
+      take: 10
+    });
+
+    // Fetch user names manually
+    const userIds = [...new Set(logs.map(l => l.userId))];
+    const users = await userRepo.findByIds(userIds);
+    const userMap = users.reduce((acc, u) => {
+      acc[u.id] = u.name;
+      return acc;
+    }, {} as Record<string, string>);
+
+    const mappedLogs = logs.map(log => ({
+      ...log,
+      userName: userMap[log.userId] || "Unknown User"
+    }));
+
+    return res.json(mappedLogs);
   }
 
   private async getCharts(req: Request, res: Response) {
@@ -41,12 +67,12 @@ export class DashboardController {
     // 2. Weekly Trends (Last 7 days)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    
+
     // Simplified weekly trend (grouping by Day of Week)
     const bookings = await bookingRepo.find(); // For a production app, filter by date in SQL
-    const trendMap: Record<string, number> = { 'Sun':0, 'Mon':0, 'Tue':0, 'Wed':0, 'Thu':0, 'Fri':0, 'Sat':0 };
+    const trendMap: Record<string, number> = { 'Sun': 0, 'Mon': 0, 'Tue': 0, 'Wed': 0, 'Thu': 0, 'Fri': 0, 'Sat': 0 };
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    
+
     bookings.forEach(b => {
       const dayIndex = new Date(b.createdAt).getDay();
       const day = dayNames[dayIndex];
@@ -63,7 +89,7 @@ export class DashboardController {
 
   private async getLiveUsage(req: Request, res: Response) {
     const bookingRepo = AppDataSource.getRepository(BookingEntity);
-    
+
     // Fetch all bookings that are currently in-possession
     const liveBookings = await bookingRepo.find({
       where: [
@@ -89,11 +115,17 @@ export class DashboardController {
       bookingRepo.count()
     ]);
 
+    const quantitySum = await equipmentRepo
+      .createQueryBuilder("equipment")
+      .select("SUM(equipment.totalQuantity)", "sum")
+      .getRawOne();
+
     return res.json({
       staffCount,
       studentCount,
       equipmentCount,
-      bookingCount
+      bookingCount,
+      totalQuantitySum: parseInt(quantitySum.sum) || 0
     });
   }
 }

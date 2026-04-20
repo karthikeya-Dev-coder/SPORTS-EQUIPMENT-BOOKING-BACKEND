@@ -9,10 +9,14 @@ export class UserRepository {
     this.repository = dataSource.getRepository(UserEntity);
   }
 
-  async findByEmail(email: string): Promise<UserEntity | null> {
+  async findByEmail(email: string, includeOtp: boolean = false): Promise<UserEntity | null> {
+    const select: (keyof UserEntity)[] = ["id", "name", "email", "password", "role", "isActive"];
+    if (includeOtp) {
+      select.push("resetOtp", "resetOtpExpiresAt");
+    }
     return this.repository.findOne({
       where: { email },
-      select: ["id", "name", "email", "password", "role", "isActive"] // Include password for login
+      select
     });
   }
 

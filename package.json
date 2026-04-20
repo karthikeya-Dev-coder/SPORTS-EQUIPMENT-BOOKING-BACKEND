@@ -8,7 +8,9 @@
     "dev": "ts-node-dev -r tsconfig-paths/register --respawn --transpile-only src/frameworks/express/server.ts",
     "start": "node dist/src/frameworks/express/server.js",
     "lint": "eslint . --ext .ts",
-    "seed": "ts-node -r tsconfig-paths/register scripts/seed.ts"
+    "seed": "ts-node -r tsconfig-paths/register scripts/seed.ts",
+    "build:functions": "npm --prefix functions install && npm --prefix functions run build",
+    "deploy": "npm run build:functions && firebase deploy --only functions"
   },
   "keywords": [],
   "author": "",

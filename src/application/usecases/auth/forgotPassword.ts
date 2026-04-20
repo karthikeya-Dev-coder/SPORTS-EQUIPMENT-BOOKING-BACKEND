@@ -1,6 +1,7 @@
 import { UserRepository } from "@/src/adapters/repositories/UserRepository";
 import { EmailService } from "@/src/infrastructure/services/EmailService";
 import bcrypt from "bcryptjs";
+import { generateRandomPassword } from "@/src/shared/utils";
 
 export class ForgotPasswordUseCase {
   constructor(
@@ -11,20 +12,21 @@ export class ForgotPasswordUseCase {
   async execute(email: string) {
     const user = await this.userRepository.findByEmail(email);
     if (!user) {
-      // For security, don't reveal if user exists. 
-      // But for this university project, we can be direct.
       throw new Error("User with this email does not exist");
     }
 
-    // Reset to a default secure password or generate one
-    const tempPassword = "sports@" + Math.floor(1000 + Math.random() * 9000);
-    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+    // Generate 6-digit numeric OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 10); // 10 minute expiry
 
-    user.password = hashedPassword;
+    user.resetOtp = otp;
+    user.resetOtpExpiresAt = expiresAt;
+    
     await this.userRepository.save(user);
 
-    await this.emailService.sendPasswordResetEmail(user.email, user.name, tempPassword);
+    await this.emailService.sendOTPEmail(user.email, user.name, otp);
     
-    return { message: "New temporary password sent to your email" };
+    return { message: "6-digit verification code sent to your email" };
   }
 }

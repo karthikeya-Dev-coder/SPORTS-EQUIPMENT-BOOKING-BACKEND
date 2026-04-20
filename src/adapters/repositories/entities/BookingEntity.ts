@@ -26,7 +26,7 @@ export class BookingEntity implements Booking {
   @Column({
     type: "enum",
     enum: ["pending", "approved", "rejected", "returned", "overdue"],
-    default: "pending"
+    default: "approved"
   })
   status!: 'pending' | 'approved' | 'rejected' | 'returned' | 'overdue';
 

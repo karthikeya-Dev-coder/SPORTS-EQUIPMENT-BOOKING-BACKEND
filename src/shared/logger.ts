@@ -31,17 +31,6 @@ import {
         new transports.Console({
           format: combine(colorize({ all: true }), consoleFormatter),
         }),
-        // Error log file
-        new transports.File({
-          filename: "logs/error.log",
-          level: "error",
-          format: fileFormatter,
-        }),
-        // Combined log file
-        new transports.File({
-          filename: "logs/combined.log",
-          format: fileFormatter,
-        }),
       ],
     });
   
@@ -49,8 +38,12 @@ import {
       Logger.logger.info(message);
     }
   
-    static error(message: string | unknown): void {
-      Logger.logger.error(message);
+    static error(message: string | unknown, error?: unknown): void {
+      if (error) {
+        Logger.logger.error(`${message}: ${error instanceof Error ? error.message : String(error)}`);
+      } else {
+        Logger.logger.error(message);
+      }
     }
   
     static debug(message: string | unknown): void {

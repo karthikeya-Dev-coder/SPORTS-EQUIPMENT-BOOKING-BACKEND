@@ -45,6 +45,7 @@ export const initializeDatabase = async () => {
   } catch (error) {
     Logger.error("❌ Error during Database initialization:");
     Logger.error(error);
-    process.exit(1);
+    // In serverless, we let the error propagate instead of killing the process
+    throw error;
   }
 };

@@ -2,13 +2,15 @@ import { BookingRepository } from "@/src/adapters/repositories/BookingRepository
 import { EquipmentRepository } from "@/src/adapters/repositories/EquipmentRepository";
 import { WarningRepository } from "@/src/adapters/repositories/WarningRepository";
 import { ActivityLogRepository } from "@/src/adapters/repositories/ActivityLogRepository";
+import { UserRepository } from "@/src/adapters/repositories/UserRepository";
 
 export class CreateBookingUseCase {
   constructor(
     private bookingRepository: BookingRepository,
     private equipmentRepository: EquipmentRepository,
     private warningRepository: WarningRepository,
-    private logRepository: ActivityLogRepository
+    private logRepository: ActivityLogRepository,
+    private userRepository: UserRepository
   ) {}
 
   async execute(data: {
@@ -19,6 +21,10 @@ export class CreateBookingUseCase {
     timeSlot: string;
     quantity: number;
   }) {
+    // 1. Fetch User Info for Logging
+    const student = await this.userRepository.findById(data.studentId);
+    const studentName = student?.name || "Student";
+
     // 1. Suspension Check (Total Count & Payment Status)
     const allWarnings = await this.warningRepository.findByStudentId(data.studentId);
     

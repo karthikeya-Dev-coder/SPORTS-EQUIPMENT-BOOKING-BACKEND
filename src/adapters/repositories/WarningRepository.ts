@@ -23,4 +23,8 @@ export class WarningRepository {
   async save(warning: Partial<WarningEntity>): Promise<WarningEntity> {
     return this.repository.save(warning);
   }
+
+  async deleteAllByStudentId(studentId: string): Promise<void> {
+    await this.repository.delete({ studentId });
+  }
 }

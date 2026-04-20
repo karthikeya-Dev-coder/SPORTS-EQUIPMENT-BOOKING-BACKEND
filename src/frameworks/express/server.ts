@@ -9,6 +9,24 @@ import { initializeDatabase } from "@/src/infrastructure/database/dataSource";
 import { registerRoutes } from "./routes";
 import { CronService } from "@/src/infrastructure/services/CronService";
 
+export const createApp = async () => {
+  const app = express();
+
+  app.use(helmet());
+  app.use(cors({
+    origin: "*", // Adjust as needed
+    credentials: true
+  }));
+  app.use(express.json());
+  app.use(cookieParser());
+
+  // Register Routes
+  const apiRouter = registerRoutes();
+  app.use("/api", apiRouter);
+
+  return app;
+};
+
 const startServer = async () => {
   try {
     // 1. Initialize Database
@@ -18,19 +36,7 @@ const startServer = async () => {
     CronService.start();
 
     // 3. Setup Express
-    const app = express();
-
-    app.use(helmet());
-    app.use(cors({
-      origin: "*", // Adjust as needed
-      credentials: true
-    }));
-    app.use(express.json());
-    app.use(cookieParser());
-
-    // 3. Register Routes
-    const apiRouter = registerRoutes();
-    app.use("/api", apiRouter);
+    const app = await createApp();
 
     // 4. Start Listen
     app.listen(config.port, () => {
@@ -45,4 +51,6 @@ const startServer = async () => {
   }
 };
 
-startServer();
+if (require.main === module) {
+  startServer();
+}

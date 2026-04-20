@@ -19,7 +19,11 @@ export class StaffRequestController {
 
   private async listAll(req: Request, res: Response) {
     const list = await this.repository.findAll();
-    return res.json(list);
+    const mapped = list.map(r => ({
+      ...r,
+      staffName: r.staff?.name || "Staff Member"
+    }));
+    return res.json(mapped);
   }
 
   private async listMy(req: AuthRequest, res: Response) {

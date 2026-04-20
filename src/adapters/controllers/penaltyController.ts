@@ -1,5 +1,6 @@
 import { Request, Response, Router } from "express";
 import { IssueWarningUseCase, PayPenaltyUseCase } from "@/src/application/usecases/penalty/penaltyManagement";
+import { ClearWarningsUseCase } from "@/src/application/usecases/penalty/clearWarnings";
 import { WarningRepository } from "@/src/adapters/repositories/WarningRepository";
 import { authenticate, authorize } from '../../infrastructure/middleware/standalone_auth';
 import { AuthRequest } from "../../shared/authMiddleware";
@@ -11,6 +12,7 @@ export class PenaltyController {
   constructor(
     private issueWarningUseCase: IssueWarningUseCase,
     private payPenaltyUseCase: PayPenaltyUseCase,
+    private clearWarningsUseCase: ClearWarningsUseCase,
     private warningRepository: WarningRepository
   ) {
     this.initRoutes();
@@ -22,6 +24,7 @@ export class PenaltyController {
     this.router.get("/student/:id", authenticate, this.listStudentWarnings.bind(this));
     this.router.post("/", authenticate, authorize(["admin", "staff"]), this.issue.bind(this));
     this.router.patch("/:id/pay", authenticate, authorize(["admin", "staff"]), this.pay.bind(this));
+    this.router.delete("/student/:id", authenticate, authorize(["admin", "staff"]), this.clear.bind(this));
   }
 
   private async listMy(req: AuthRequest, res: Response) {
@@ -60,6 +63,15 @@ export class PenaltyController {
     try {
       const result = await this.payPenaltyUseCase.execute(req.params.id as string);
       return res.json(result);
+    } catch (error: any) {
+      return res.status(400).json({ message: error.message });
+    }
+  }
+
+  private async clear(req: AuthRequest, res: Response) {
+    try {
+      await this.clearWarningsUseCase.execute(req.params.id as string, req.user!.id);
+      return res.status(204).send();
     } catch (error: any) {
       return res.status(400).json({ message: error.message });
     }

@@ -17,6 +17,8 @@ import { StaffRequestRepository } from "@/src/adapters/repositories/StaffRequest
 
 import { LoginUseCase } from "@/src/application/usecases/auth/login";
 import { ForgotPasswordUseCase } from "@/src/application/usecases/auth/forgotPassword";
+import { ResetPasswordUseCase } from "@/src/application/usecases/auth/resetPassword";
+import { SendAdminCredentialsUseCase } from "@/src/application/usecases/auth/sendAdminCredentials";
 import { ListEquipmentUseCase } from "@/src/application/usecases/equipment/listEquipment";
 import { AddEquipmentUseCase, UpdateEquipmentUseCase, DeleteEquipmentUseCase } from "@/src/application/usecases/equipment/equipmentManagement";
 import { CreateBookingUseCase } from "@/src/application/usecases/booking/createBooking";
@@ -24,6 +26,7 @@ import { UpdateBookingStatusUseCase } from "@/src/application/usecases/booking/u
 import { BulkImportStudentsUseCase } from "@/src/application/usecases/user/bulkImportStudents";
 import { CreateUserUseCase } from "@/src/application/usecases/user/createUser";
 import { IssueWarningUseCase, PayPenaltyUseCase } from "@/src/application/usecases/penalty/penaltyManagement";
+import { ClearWarningsUseCase } from "@/src/application/usecases/penalty/clearWarnings";
 import { EmailService } from "@/src/infrastructure/services/EmailService";
 
 export const registerRoutes = () => {
@@ -43,19 +46,22 @@ export const registerRoutes = () => {
   // Use cases
   const loginUseCase = new LoginUseCase(userRepository);
   const forgotPasswordUseCase = new ForgotPasswordUseCase(userRepository, emailService);
+  const resetPasswordUseCase = new ResetPasswordUseCase(userRepository);
+  const sendAdminCredentialsUseCase = new SendAdminCredentialsUseCase(emailService);
   const listEquipmentUseCase = new ListEquipmentUseCase(equipmentRepository);
   const addEquipmentUseCase = new AddEquipmentUseCase(equipmentRepository);
   const updateEquipmentUseCase = new UpdateEquipmentUseCase(equipmentRepository);
   const deleteEquipmentUseCase = new DeleteEquipmentUseCase(equipmentRepository);
-  const createBookingUseCase = new CreateBookingUseCase(bookingRepository, equipmentRepository, warningRepository, logRepository);
-  const updateBookingStatusUseCase = new UpdateBookingStatusUseCase(bookingRepository, equipmentRepository, logRepository);
+  const createBookingUseCase = new CreateBookingUseCase(bookingRepository, equipmentRepository, warningRepository, logRepository, userRepository);
+  const updateBookingStatusUseCase = new UpdateBookingStatusUseCase(bookingRepository, equipmentRepository, logRepository, userRepository, emailService);
   const bulkImportUseCase = new BulkImportStudentsUseCase(userRepository, emailService);
   const createUserUseCase = new CreateUserUseCase(userRepository, emailService);
-  const issueWarningUseCase = new IssueWarningUseCase(warningRepository, logRepository);
+  const issueWarningUseCase = new IssueWarningUseCase(warningRepository, logRepository, userRepository);
   const payPenaltyUseCase = new PayPenaltyUseCase(warningRepository);
+  const clearWarningsUseCase = new ClearWarningsUseCase(warningRepository, logRepository, userRepository);
 
   // Controllers
-  const authController = new AuthController(loginUseCase, forgotPasswordUseCase);
+  const authController = new AuthController(loginUseCase, forgotPasswordUseCase, resetPasswordUseCase, sendAdminCredentialsUseCase);
   const equipmentController = new EquipmentController(
     listEquipmentUseCase,
     addEquipmentUseCase,
@@ -65,7 +71,7 @@ export const registerRoutes = () => {
   const bookingController = new BookingController(createBookingUseCase, updateBookingStatusUseCase, bookingRepository);
   const userController = new UserController(userRepository, bulkImportUseCase, createUserUseCase);
   const dashboardController = new DashboardController();
-  const penaltyController = new PenaltyController(issueWarningUseCase, payPenaltyUseCase, warningRepository);
+  const penaltyController = new PenaltyController(issueWarningUseCase, payPenaltyUseCase, clearWarningsUseCase, warningRepository);
   const staffRequestController = new StaffRequestController(staffRequestRepository);
 
   // Health check

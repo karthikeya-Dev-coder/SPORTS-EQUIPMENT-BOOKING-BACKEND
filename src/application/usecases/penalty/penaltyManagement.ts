@@ -1,10 +1,12 @@
 import { WarningRepository } from "@/src/adapters/repositories/WarningRepository";
 import { ActivityLogRepository } from "@/src/adapters/repositories/ActivityLogRepository";
+import { UserRepository } from "@/src/adapters/repositories/UserRepository";
 
 export class IssueWarningUseCase {
   constructor(
     private warningRepository: WarningRepository,
-    private logRepository: ActivityLogRepository
+    private logRepository: ActivityLogRepository,
+    private userRepository: UserRepository
   ) {}
 
   async execute(data: {
@@ -14,6 +16,9 @@ export class IssueWarningUseCase {
     issuedBy: string;
     amount?: number;
   }) {
+    const student = await this.userRepository.findById(data.studentId);
+    const studentName = student?.name || data.studentId;
+
     const warning = await this.warningRepository.save({
       ...data,
       isPaid: false,
@@ -23,7 +28,7 @@ export class IssueWarningUseCase {
     await this.logRepository.save({
       userId: data.issuedBy,
       action: "Warning Issued",
-      details: `Level ${data.level} warning issued to student ${data.studentId}: ${data.reason}`,
+      details: `Level ${data.level} warning issued to student ${studentName}: ${data.reason}`,
       timestamp: new Date()
     });
 

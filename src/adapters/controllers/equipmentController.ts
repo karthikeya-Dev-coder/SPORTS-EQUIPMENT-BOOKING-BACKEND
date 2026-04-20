@@ -57,7 +57,7 @@ export class EquipmentController {
 
   private async update(req: Request, res: Response) {
     try {
-      const result = await this.updateEquipmentUseCase.execute(req.params.id!, req.body);
+      const result = await this.updateEquipmentUseCase.execute(req.params.id as string, req.body);
       return res.json(result);
     } catch (error: any) {
       return res.status(400).json({ message: error.message });
@@ -66,7 +66,7 @@ export class EquipmentController {
 
   private async remove(req: Request, res: Response) {
     try {
-      await this.deleteEquipmentUseCase.execute(req.params.id!);
+      await this.deleteEquipmentUseCase.execute(req.params.id as string);
       return res.status(204).send();
     } catch (error: any) {
       return res.status(400).json({ message: error.message });

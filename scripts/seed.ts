@@ -71,7 +71,7 @@ const seed = async () => {
 
     const bookings = [
       { studentId: '44444444-4444-4444-4444-444444444444', equipmentId: 'e1111111-1111-1111-1111-111111111111', date: today, timeSlot: '09:00 - 10:00', quantity: 1, status: 'approved' },
-      { studentId: '55555555-5555-5555-5555-555555555555', equipmentId: 'e2222222-2222-2222-2222-222222222222', date: today, timeSlot: '10:00 - 11:00', quantity: 1, status: 'pending' },
+      { studentId: '55555555-5555-5555-5555-555555555555', equipmentId: 'e2222222-2222-2222-2222-222222222222', date: today, timeSlot: '10:00 - 11:00', quantity: 1, status: 'approved' },
       { studentId: '66666666-6666-6666-6666-666666666666', equipmentId: 'e4444444-4444-4444-4444-444444444444', date: yesterday, timeSlot: '14:00 - 15:00', quantity: 2, status: 'returned' },
       { studentId: '44444444-4444-4444-4444-444444444444', equipmentId: 'e3333333-3333-3333-3333-333333333333', date: yesterday, timeSlot: '11:00 - 12:00', quantity: 1, status: 'overdue' },
     ];

@@ -1,8 +1,8 @@
 import bcrypt from "bcryptjs";
 import { UserRepository } from "@/src/adapters/repositories/UserRepository";
-import { UserEntity } from "@/src/adapters/repositories/entities/UserEntity";
 import { EmailService } from "@/src/infrastructure/services/EmailService";
 import { Logger } from "@/src/shared/logger";
+import { generateRandomPassword } from "@/src/shared/utils";
 
 interface ImportStudent {
   name: string;
@@ -17,12 +17,13 @@ export class BulkImportStudentsUseCase {
   ) {}
 
   async execute(students: ImportStudent[], sendEmail: boolean) {
-    const defaultPassword = "Welcome123!";
-    const hashedPassword = await bcrypt.hash(defaultPassword, 10);
     const results = [];
 
     for (const student of students) {
       try {
+        const studentPassword = generateRandomPassword();
+        const hashedPassword = await bcrypt.hash(studentPassword, 10);
+
         const existing = await this.userRepository.findByEmail(student.email);
         if (existing) {
           results.push({ email: student.email, status: "skipped", reason: "Already exists" });
@@ -39,7 +40,7 @@ export class BulkImportStudentsUseCase {
         });
 
         if (sendEmail) {
-          await this.emailService.sendWelcomeEmail(student.email, student.name, defaultPassword);
+          await this.emailService.sendWelcomeEmail(student.email, student.name, studentPassword);
         }
 
         results.push({ email: student.email, id: newUser.id, status: "imported" });

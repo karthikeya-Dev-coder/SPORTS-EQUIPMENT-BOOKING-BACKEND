@@ -1,8 +1,14 @@
 # Dependencies
 node_modules/
 
+# Firebase
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+
 # Build output
 dist/
+functions/dist/
 
 # Environment variables
 .env

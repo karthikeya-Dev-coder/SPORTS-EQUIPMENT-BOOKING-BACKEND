@@ -88,7 +88,7 @@ export class BookingController {
       const { id } = req.params;
       const { status } = req.body;
       const userId = req.user!.id;
-      const userName = req.user!.email; // Temporary
+      const userName = req.user!.name;
 
       const result = await this.updateBookingStatusUseCase.execute(
         id as string, 
