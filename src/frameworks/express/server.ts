@@ -21,8 +21,8 @@ app.use(cookieParser());
 
 // Database initialization middleware for serverless environments
 app.use(async (req, res, next) => {
-  // Skip DB initialization for plain health checks if needed
-  if (req.path === "/api/health") {
+  // Skip DB initialization for plain health checks and root if needed
+  if (req.path === "/api/health" || req.path === "/") {
     return next();
   }
 
@@ -38,6 +38,15 @@ app.use(async (req, res, next) => {
     });
     return;
   }
+});
+
+// Root route
+app.get("/", (req, res) => {
+  res.json({
+    message: "Sports Equipment Booking API is running",
+    health: "/api/health",
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Register Routes
