@@ -3,6 +3,9 @@ import { UserEntity } from "./entities/UserEntity";
 import { AppDataSource } from "@/src/infrastructure/database/dataSource";
 
 export class UserRepository {
+  async query(queryString: string, parameters?: any[]): Promise<any> {
+    return this.repository.query(queryString, parameters);
+  }
   private repository: Repository<UserEntity>;
 
   constructor(dataSource: DataSource = AppDataSource) {

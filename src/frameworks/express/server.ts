@@ -3,11 +3,11 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
-import { config } from "@/src/shared/config";
-import { Logger } from "@/src/shared/logger";
-import { initializeDatabase } from "@/src/infrastructure/database/dataSource";
+import { config } from "../../shared/config";
+import { Logger } from "../../shared/logger";
+import { initializeDatabase } from "../../infrastructure/database/dataSource";
 import { registerRoutes } from "./routes";
-import { CronService } from "@/src/infrastructure/services/CronService";
+import { CronService } from "../../infrastructure/services/CronService";
 
 const app = express();
 
@@ -21,12 +21,21 @@ app.use(cookieParser());
 
 // Database initialization middleware for serverless environments
 app.use(async (req, res, next) => {
+  // Skip DB initialization for plain health checks if needed
+  if (req.path === "/api/health") {
+    return next();
+  }
+
   try {
     await initializeDatabase();
     next();
   } catch (error) {
     Logger.error("Failed to initialize database in middleware:", error);
-    res.status(500).json({ error: "Internal Server Error (DB)" });
+    res.status(503).json({ 
+      error: "Service Unavailable", 
+      message: "Database connection failed",
+      details: process.env.NODE_ENV === 'development' ? error : undefined
+    });
     return;
   }
 });

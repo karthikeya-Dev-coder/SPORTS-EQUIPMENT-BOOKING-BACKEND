@@ -1,33 +1,33 @@
 import { Router } from "express";
 import { authenticate, authorize } from "../../infrastructure/middleware/standalone_auth";
-import { AuthController } from "@/src/adapters/controllers/authController";
-import { EquipmentController } from "@/src/adapters/controllers/equipmentController";
-import { BookingController } from "@/src/adapters/controllers/bookingController";
-import { UserController } from "@/src/adapters/controllers/userController";
-import { DashboardController } from "@/src/adapters/controllers/dashboardController";
-import { StaffRequestController } from "@/src/adapters/controllers/staffRequestController";
-import { PenaltyController } from "@/src/adapters/controllers/penaltyController";
+import { AuthController } from "../../adapters/controllers/authController";
+import { EquipmentController } from "../../adapters/controllers/equipmentController";
+import { BookingController } from "../../adapters/controllers/bookingController";
+import { UserController } from "../../adapters/controllers/userController";
+import { DashboardController } from "../../adapters/controllers/dashboardController";
+import { StaffRequestController } from "../../adapters/controllers/staffRequestController";
+import { PenaltyController } from "../../adapters/controllers/penaltyController";
 
-import { UserRepository } from "@/src/adapters/repositories/UserRepository";
-import { EquipmentRepository } from "@/src/adapters/repositories/EquipmentRepository";
-import { BookingRepository } from "@/src/adapters/repositories/BookingRepository";
-import { ActivityLogRepository } from "@/src/adapters/repositories/ActivityLogRepository";
-import { WarningRepository } from "@/src/adapters/repositories/WarningRepository";
-import { StaffRequestRepository } from "@/src/adapters/repositories/StaffRequestRepository";
+import { UserRepository } from "../../adapters/repositories/UserRepository";
+import { EquipmentRepository } from "../../adapters/repositories/EquipmentRepository";
+import { BookingRepository } from "../../adapters/repositories/BookingRepository";
+import { ActivityLogRepository } from "../../adapters/repositories/ActivityLogRepository";
+import { WarningRepository } from "../../adapters/repositories/WarningRepository";
+import { StaffRequestRepository } from "../../adapters/repositories/StaffRequestRepository";
 
-import { LoginUseCase } from "@/src/application/usecases/auth/login";
-import { ForgotPasswordUseCase } from "@/src/application/usecases/auth/forgotPassword";
-import { ResetPasswordUseCase } from "@/src/application/usecases/auth/resetPassword";
-import { SendAdminCredentialsUseCase } from "@/src/application/usecases/auth/sendAdminCredentials";
-import { ListEquipmentUseCase } from "@/src/application/usecases/equipment/listEquipment";
-import { AddEquipmentUseCase, UpdateEquipmentUseCase, DeleteEquipmentUseCase } from "@/src/application/usecases/equipment/equipmentManagement";
-import { CreateBookingUseCase } from "@/src/application/usecases/booking/createBooking";
-import { UpdateBookingStatusUseCase } from "@/src/application/usecases/booking/updateBookingStatus";
-import { BulkImportStudentsUseCase } from "@/src/application/usecases/user/bulkImportStudents";
-import { CreateUserUseCase } from "@/src/application/usecases/user/createUser";
-import { IssueWarningUseCase, PayPenaltyUseCase } from "@/src/application/usecases/penalty/penaltyManagement";
-import { ClearWarningsUseCase } from "@/src/application/usecases/penalty/clearWarnings";
-import { EmailService } from "@/src/infrastructure/services/EmailService";
+import { LoginUseCase } from "../../application/usecases/auth/login";
+import { ForgotPasswordUseCase } from "../../application/usecases/auth/forgotPassword";
+import { ResetPasswordUseCase } from "../../application/usecases/auth/resetPassword";
+import { SendAdminCredentialsUseCase } from "../../application/usecases/auth/sendAdminCredentials";
+import { ListEquipmentUseCase } from "../../application/usecases/equipment/listEquipment";
+import { AddEquipmentUseCase, UpdateEquipmentUseCase, DeleteEquipmentUseCase } from "../../application/usecases/equipment/equipmentManagement";
+import { CreateBookingUseCase } from "../../application/usecases/booking/createBooking";
+import { UpdateBookingStatusUseCase } from "../../application/usecases/booking/updateBookingStatus";
+import { BulkImportStudentsUseCase } from "../../application/usecases/user/bulkImportStudents";
+import { CreateUserUseCase } from "../../application/usecases/user/createUser";
+import { IssueWarningUseCase, PayPenaltyUseCase } from "../../application/usecases/penalty/penaltyManagement";
+import { ClearWarningsUseCase } from "../../application/usecases/penalty/clearWarnings";
+import { EmailService } from "../../infrastructure/services/EmailService";
 
 export const registerRoutes = () => {
   const router = Router();
@@ -76,6 +76,23 @@ export const registerRoutes = () => {
 
   // Health check
   router.get("/health", (req, res) => res.json({ status: "ok" }));
+  router.get("/health/db", async (req, res) => {
+    try {
+      const result = await userRepository.query("SELECT 1 as connected");
+      res.json({ 
+        status: "ok", 
+        database: "connected",
+        timestamp: new Date().toISOString(),
+        result: result[0]
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        status: "error", 
+        database: "disconnected",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
 
   // API Routes
   router.use("/auth", authController.router);

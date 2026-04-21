@@ -36,16 +36,24 @@ export const AppDataSource = new DataSource({
   subscribers: [],
 });
 
+let initializationPromise: Promise<void> | null = null;
+
 export const initializeDatabase = async () => {
-  try {
-    if (!AppDataSource.isInitialized) {
-      await AppDataSource.initialize();
-      Logger.info("✅ Database connection established");
-    }
-  } catch (error) {
-    Logger.error("❌ Error during Database initialization:");
-    Logger.error(error);
-    // In serverless, we let the error propagate instead of killing the process
-    throw error;
+  if (AppDataSource.isInitialized) return;
+
+  if (!initializationPromise) {
+    initializationPromise = (async () => {
+      try {
+        await AppDataSource.initialize();
+        Logger.info("✅ Database connection established");
+      } catch (error) {
+        Logger.error("❌ Error during Database initialization:");
+        Logger.error(error);
+        initializationPromise = null; // Allow retry
+        throw error;
+      }
+    })();
   }
+
+  return initializationPromise;
 };
