@@ -8,6 +8,7 @@ import { Logger } from "../../shared/logger";
 import { initializeDatabase } from "../../infrastructure/database/dataSource";
 import { registerRoutes } from "./routes";
 import { CronService } from "../../infrastructure/services/CronService";
+import { landingPageHTML } from "./views/LandingPage";
 
 const app = express();
 
@@ -42,11 +43,7 @@ app.use(async (req, res, next) => {
 
 // Root route
 app.get("/", (req, res) => {
-  res.json({
-    message: "Sports Equipment Booking API is running",
-    health: "/api/health",
-    timestamp: new Date().toISOString()
-  });
+  res.send(landingPageHTML);
 });
 
 // Register Routes
