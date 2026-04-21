@@ -8,7 +8,7 @@ export class CreateUserUseCase {
   constructor(
     private userRepository: UserRepository,
     private emailService: EmailService
-  ) {}
+  ) { }
 
   async execute(data: {
     name: string;

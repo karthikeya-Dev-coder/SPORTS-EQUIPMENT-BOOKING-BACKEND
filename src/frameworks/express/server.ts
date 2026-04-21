@@ -30,12 +30,18 @@ app.use(async (req, res, next) => {
   try {
     await initializeDatabase();
     next();
-  } catch (error) {
-    Logger.error("Failed to initialize database in middleware:", error);
+  } catch (error: any) {
+    const dbHost = config.database.url ? 'DATABASE_URL' : config.database.host;
+    Logger.error(`Failed to initialize database connection to [${dbHost}]`, error);
+    
     res.status(503).json({ 
       error: "Service Unavailable", 
       message: "Database connection failed",
-      details: process.env.NODE_ENV === 'development' ? error : undefined
+      details: config.nodeEnv === 'development' ? {
+        message: error.message,
+        code: error.code,
+        host: dbHost
+      } : undefined
     });
     return;
   }

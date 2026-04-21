@@ -34,10 +34,12 @@ export class BookingController {
     }
   }
 
-  private async listAll(req: Request, res: Response) {
+  private async listAll(req: AuthRequest, res: Response) {
     try {
       const query = typeof req.query.q === "string" ? req.query.q : undefined;
-      const bookings = await this.bookingRepository.findAll(query);
+      const staffId = req.user!.role === "staff" ? req.user!.id : undefined;
+      
+      const bookings = await this.bookingRepository.findAll(query, staffId);
       return res.json(bookings);
     } catch (error: any) {
       return res.status(500).json({ message: error.message });
@@ -94,7 +96,8 @@ export class BookingController {
         id as string, 
         status as any, 
         userId, 
-        userName
+        userName,
+        req.user!.role
       );
       return res.json(result);
     } catch (error: any) {

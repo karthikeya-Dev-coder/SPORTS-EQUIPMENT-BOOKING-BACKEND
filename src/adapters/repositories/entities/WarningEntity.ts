@@ -34,4 +34,16 @@ export class WarningEntity implements Warning {
   @ManyToOne(() => UserEntity)
   @JoinColumn({ name: "studentId" })
   student!: UserEntity;
+
+  @ManyToOne(() => UserEntity)
+  @JoinColumn({ name: "issuedBy" })
+  issuer!: UserEntity;
+
+  toJSON() {
+    return {
+      ...this,
+      studentName: this.student?.name,
+      issuedByName: this.issuer?.name
+    };
+  }
 }

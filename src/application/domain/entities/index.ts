@@ -20,6 +20,7 @@ export interface Equipment {
   available: number;
   inUse: number;
   assignedStaffId?: string;
+  assignedStaff?: User;
   createdAt: Date;
 }
 

@@ -37,8 +37,15 @@ export class PenaltyController {
     }
   }
 
-  private async listAll(req: Request, res: Response) {
-    const list = await this.warningRepository.findAll();
+  private async listAll(req: AuthRequest, res: Response) {
+    let issuedBy: string | undefined;
+    
+    // Staff only see warnings they issued
+    if (req.user!.role === "staff") {
+      issuedBy = req.user!.id;
+    }
+
+    const list = await this.warningRepository.findAll(issuedBy);
     return res.json(list);
   }
 

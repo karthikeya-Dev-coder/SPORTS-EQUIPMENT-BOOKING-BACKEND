@@ -4,7 +4,7 @@ import { AppDataSource } from "@/src/infrastructure/database/dataSource";
 
 export class WarningRepository {
   async findById(id: string): Promise<WarningEntity | null> {
-    return this.repository.findOne({ where: { id } as any });
+    return this.repository.findOne({ where: { id } as any, relations: ["student", "issuer"] });
   }
   private repository: Repository<WarningEntity>;
 
@@ -12,12 +12,17 @@ export class WarningRepository {
     this.repository = dataSource.getRepository(WarningEntity);
   }
 
-  async findAll(): Promise<WarningEntity[]> {
-    return this.repository.find({ relations: ["student"] });
+  async findAll(issuedBy?: string): Promise<WarningEntity[]> {
+    const where: any = {};
+    if (issuedBy) where.issuedBy = issuedBy;
+    return this.repository.find({ 
+      where,
+      relations: ["student", "issuer"] 
+    });
   }
 
   async findByStudentId(studentId: string): Promise<WarningEntity[]> {
-    return this.repository.find({ where: { studentId }, relations: ["student"] });
+    return this.repository.find({ where: { studentId }, relations: ["student", "issuer"] });
   }
 
   async save(warning: Partial<WarningEntity>): Promise<WarningEntity> {

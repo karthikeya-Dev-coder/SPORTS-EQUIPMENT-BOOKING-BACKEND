@@ -9,14 +9,18 @@ export class BookingRepository {
     this.repository = dataSource.getRepository(BookingEntity);
   }
 
-  async findAll(query?: string): Promise<BookingEntity[]> {
+  async findAll(query?: string, staffId?: string): Promise<BookingEntity[]> {
     const qb = this.repository.createQueryBuilder("booking")
       .leftJoinAndSelect("booking.student", "student")
       .leftJoinAndSelect("booking.equipment", "equipment")
       .orderBy("booking.createdAt", "DESC");
 
     if (query) {
-      qb.where("student.name ILIKE :q OR equipment.name ILIKE :q", { q: `%${query}%` });
+      qb.andWhere("(student.name ILIKE :q OR equipment.name ILIKE :q)", { q: `%${query}%` });
+    }
+
+    if (staffId) {
+      qb.andWhere("equipment.assignedStaffId = :staffId", { staffId });
     }
 
     return qb.getMany();

@@ -2,9 +2,8 @@ const { execSync } = require('child_process');
 
 const envVars = {
   DB_HOST: "aws-1-ap-south-1.pooler.supabase.com",
-  DB_PORT: "6543",
+  DB_PORT: "5432",
   DB_USER: "postgres.mzkpacbxuvrzrfzytoee",
-  DB_PASSWORD: "karthikeya0pc",
   DB_NAME: "postgres",
   DB_SSL: "true",
   JWT_SECRET: "your_super_secret_key_123",
@@ -18,6 +17,9 @@ const envVars = {
 for (const [key, value] of Object.entries(envVars)) {
   console.log(`Adding ${key}...`);
   try {
+    try {
+      execSync(`npx vercel env rm ${key} production --yes`, { stdio: 'ignore' });
+    } catch(e) {} // ignore if it doesn't exist
     execSync(`npx vercel env add ${key} production --value "${value}" --yes`, { stdio: 'inherit' });
     console.log(`✅ Added ${key}`);
   } catch (error) {

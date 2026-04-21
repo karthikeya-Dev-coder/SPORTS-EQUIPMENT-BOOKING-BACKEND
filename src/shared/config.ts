@@ -5,7 +5,9 @@ dotenv.config();
 export const config = {
   port: process.env.PORT || 4000,
   jwtSecret: process.env.JWT_SECRET || "super-secret-key",
+  nodeEnv: process.env.NODE_ENV || "development",
   database: {
+    url: process.env.DATABASE_URL,
     host: process.env.DB_HOST || "localhost",
     port: parseInt(process.env.DB_PORT || "5432"),
     username: process.env.DB_USER || "postgres",

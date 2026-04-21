@@ -11,6 +11,7 @@ import { StaffRequestEntity } from "@/src/adapters/repositories/entities/StaffRe
 
 export const AppDataSource = new DataSource({
   type: "postgres",
+  ...(config.database.url ? { url: config.database.url } : {}),
   host: config.database.host,
   port: config.database.port,
   username: config.database.username,
@@ -20,10 +21,10 @@ export const AppDataSource = new DataSource({
   extra: {
     max: 10,
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 10000,
+    connectionTimeoutMillis: 5000,
   },
-  synchronize: true, // Set to false in production
-  logging: false,
+  synchronize: config.nodeEnv !== "production",
+  logging: config.nodeEnv !== "production",
   entities: [
     UserEntity,
     EquipmentEntity,

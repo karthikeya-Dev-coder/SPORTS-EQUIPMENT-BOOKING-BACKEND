@@ -15,13 +15,19 @@ export class UpdateBookingStatusUseCase {
     private emailService: EmailService
   ) {}
 
-  async execute(id: string, status: 'approved' | 'rejected' | 'returned' | 'overdue', userId: string, userName: string) {
+  async execute(id: string, status: 'approved' | 'rejected' | 'returned' | 'overdue', userId: string, userName: string, userRole: string) {
     const booking = await this.bookingRepository.findById(id);
 
     if (!booking) throw new Error("Booking not found");
 
     const equipment = await this.equipmentRepository.findById(booking.equipmentId);
     if (!equipment) throw new Error("Equipment not found");
+
+    // Security Check: Staff can only manage their own assigned equipment
+    if (userRole === "staff" && equipment.assignedStaffId !== userId) {
+      Logger.error(`Security alert: Staff ${userName} (${userId}) attempted to manage unassigned equipment: ${equipment.name}`);
+      throw new Error("You are not authorized to manage this equipment. It is not assigned to you.");
+    }
 
     const oldStatus = booking.status;
 

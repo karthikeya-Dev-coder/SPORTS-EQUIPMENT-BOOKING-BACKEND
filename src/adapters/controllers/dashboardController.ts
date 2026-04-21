@@ -22,17 +22,24 @@ export class DashboardController {
     this.router.get("/logs", authenticate, authorize(["admin", "staff"]), this.getLogs.bind(this));
   }
 
-  private async getLogs(req: Request, res: Response) {
+  private async getLogs(req: AuthRequest, res: Response) {
     const logRepo = AppDataSource.getRepository(ActivityLogEntity);
     const userRepo = AppDataSource.getRepository(UserEntity);
 
     const twoDaysAgo = new Date();
     twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
 
+    const whereClause: any = {
+      timestamp: MoreThanOrEqual(twoDaysAgo)
+    };
+
+    // Staff only see their own logs
+    if (req.user!.role === "staff") {
+      whereClause.userId = req.user!.id;
+    }
+
     const logs = await logRepo.find({
-      where: {
-        timestamp: MoreThanOrEqual(twoDaysAgo)
-      },
+      where: whereClause,
       order: { timestamp: "DESC" },
       take: 10
     });

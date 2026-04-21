@@ -22,7 +22,9 @@ export class EquipmentRepository {
   }
 
   async save(equipment: Partial<EquipmentEntity>): Promise<EquipmentEntity> {
-    return this.repository.save(equipment);
+    const saved = await this.repository.save(equipment);
+    // Reload to ensure eager relations (like assignedStaff) are populated
+    return (await this.findById(saved.id))!;
   }
 
   async delete(id: string): Promise<void> {

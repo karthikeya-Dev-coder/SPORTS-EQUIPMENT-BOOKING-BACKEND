@@ -40,7 +40,7 @@ export class UserController {
 
       const newPassword = generateRandomPassword();
       const hashedPassword = await bcrypt.hash(newPassword, 10);
-      
+
       await this.userRepository.save({
         ...user,
         password: hashedPassword
@@ -58,7 +58,7 @@ export class UserController {
     try {
       const user = await this.userRepository.findById(req.params.id as string);
       if (!user) return res.status(404).json({ message: "User not found" });
-      
+
       const updated = await this.userRepository.save({ ...user, ...req.body });
       return res.json(updated);
     } catch (error: any) {
@@ -92,18 +92,18 @@ export class UserController {
     try {
       const { email } = req.body;
       const user = await this.userRepository.findById(req.user!.id as string);
-      
+
       if (!user) return res.status(404).json({ message: "User not found" });
 
       const newPassword = generateRandomPassword();
       const hashedPassword = await bcrypt.hash(newPassword, 10);
-      
+
       await this.userRepository.save({
         ...user,
         password: hashedPassword
       });
 
-      const emailService = new EmailService(); 
+      const emailService = new EmailService();
       await emailService.sendWelcomeEmail(email || user.email, user.name, newPassword);
 
       return res.json({ message: `New credentials generated and sent to ${email || user.email}` });
