@@ -53,7 +53,7 @@ export const registerRoutes = () => {
   const updateEquipmentUseCase = new UpdateEquipmentUseCase(equipmentRepository);
   const deleteEquipmentUseCase = new DeleteEquipmentUseCase(equipmentRepository);
   const createBookingUseCase = new CreateBookingUseCase(bookingRepository, equipmentRepository, warningRepository, logRepository, userRepository);
-  const updateBookingStatusUseCase = new UpdateBookingStatusUseCase(bookingRepository, equipmentRepository, logRepository, userRepository, emailService);
+  const updateBookingStatusUseCase = new UpdateBookingStatusUseCase(bookingRepository, equipmentRepository, logRepository, userRepository, warningRepository, emailService);
   const bulkImportUseCase = new BulkImportStudentsUseCase(userRepository, emailService);
   const createUserUseCase = new CreateUserUseCase(userRepository, emailService);
   const issueWarningUseCase = new IssueWarningUseCase(warningRepository, logRepository, userRepository);

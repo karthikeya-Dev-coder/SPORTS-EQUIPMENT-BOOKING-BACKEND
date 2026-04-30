@@ -88,7 +88,7 @@ export class BookingController {
   private async updateStatus(req: AuthRequest, res: Response) {
     try {
       const { id } = req.params;
-      const { status } = req.body;
+      const { status, penalty } = req.body;
       const userId = req.user!.id;
       const userName = req.user!.name;
 
@@ -97,7 +97,8 @@ export class BookingController {
         status as any, 
         userId, 
         userName,
-        req.user!.role
+        req.user!.role,
+        penalty
       );
       return res.json(result);
     } catch (error: any) {

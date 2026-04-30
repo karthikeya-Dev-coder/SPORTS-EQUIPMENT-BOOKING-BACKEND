@@ -38,20 +38,30 @@ export class PenaltyController {
   }
 
   private async listAll(req: AuthRequest, res: Response) {
-    let issuedBy: string | undefined;
-    
-    // Staff only see warnings they issued
-    if (req.user!.role === "staff") {
-      issuedBy = req.user!.id;
-    }
+    try {
+      let issuedBy: string | undefined;
+      
+      // Staff only see warnings they issued
+      if (req.user!.role === "staff") {
+        issuedBy = req.user!.id;
+      }
 
-    const list = await this.warningRepository.findAll(issuedBy);
-    return res.json(list);
+      const list = await this.warningRepository.findAll(issuedBy);
+      return res.json(list);
+    } catch (error: any) {
+      Logger.error("Failed to list all warnings:", error);
+      return res.status(500).json({ message: "Internal server error while fetching warnings", error: error.message });
+    }
   }
 
   private async listStudentWarnings(req: Request, res: Response) {
-    const list = await this.warningRepository.findByStudentId(req.params.id as string);
-    return res.json(list);
+    try {
+      const list = await this.warningRepository.findByStudentId(req.params.id as string);
+      return res.json(list);
+    } catch (error: any) {
+      Logger.error("Failed to list student warnings:", error);
+      return res.status(500).json({ message: "Internal server error while fetching student warnings", error: error.message });
+    }
   }
 
   private async issue(req: AuthRequest, res: Response) {

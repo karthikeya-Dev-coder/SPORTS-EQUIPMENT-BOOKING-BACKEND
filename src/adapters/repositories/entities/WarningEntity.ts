@@ -16,7 +16,7 @@ export class WarningEntity implements Warning {
   @Column({ type: "int" })
   level!: 1 | 2 | 3;
 
-  @Column()
+  @Column({ nullable: true })
   issuedBy!: string;
 
   @CreateDateColumn()
@@ -35,9 +35,9 @@ export class WarningEntity implements Warning {
   @JoinColumn({ name: "studentId" })
   student!: UserEntity;
 
-  @ManyToOne(() => UserEntity)
+  @ManyToOne(() => UserEntity, { nullable: true })
   @JoinColumn({ name: "issuedBy" })
-  issuer!: UserEntity;
+  issuer?: UserEntity;
 
   toJSON() {
     return {

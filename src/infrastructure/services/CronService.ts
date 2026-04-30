@@ -1,6 +1,7 @@
 import cron from "node-cron";
 import { AppDataSource } from "@/src/infrastructure/database/dataSource";
 import { BookingEntity } from "@/src/adapters/repositories/entities/BookingEntity";
+import { WarningEntity } from "@/src/adapters/repositories/entities/WarningEntity";
 import { Logger } from "@/src/shared/logger";
 import { LessThan } from "typeorm";
 
@@ -27,7 +28,32 @@ export class CronService {
           if (endTime < now) {
             booking.status = "overdue";
             await bookingRepo.save(booking);
-            Logger.info(`⏰ Booking ${booking.id} automatically marked as OVERDUE`);
+            
+            // Auto-issue Level 1 penalty
+            const warningRepo = AppDataSource.getRepository(WarningEntity);
+            
+            // Check if we already issued an overdue warning for this booking to avoid duplicates
+            // We can check by reason string containing booking id or just search for this student's recent warnings
+            const existingWarning = await warningRepo.findOne({
+              where: { 
+                studentId: booking.studentId, 
+                reason: `Auto-Strike: Session time limit exceeded for ${booking.equipment?.name || 'Equipment'} (Ref: ${booking.id.split('-')[0]})` 
+              }
+            });
+
+            if (!existingWarning) {
+              await warningRepo.save({
+                studentId: booking.studentId,
+                reason: `Auto-Strike: Session time limit exceeded for ${booking.equipment?.name || 'Equipment'} (Ref: ${booking.id.split('-')[0]})`,
+                level: 1, // Start with Level 1 for auto-strikes
+                issuedAt: new Date(),
+                isPaid: false,
+                amount: 50 // Fixed initial overdue fine
+              });
+              Logger.info(`⏰ Booking ${booking.id} automatically marked as OVERDUE and Level 1 penalty issued`);
+            } else {
+              Logger.info(`⏰ Booking ${booking.id} marked as OVERDUE (Penalty already exists)`);
+            }
           }
         }
       } catch (error) {
