@@ -32,3 +32,6 @@ Thumbs.db
 *.tsbuildinfo
 
 .vercel
+
+# Seed scripts (contains credentials)
+scripts/
